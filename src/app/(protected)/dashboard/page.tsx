@@ -49,6 +49,19 @@ export default async function DashboardPage() {
         .eq("id", assignment.target_id)
         .single();
       target = targetData as Player | null;
+
+      // Generate signed URL for headshot (bucket is private)
+      if (target?.photo_url) {
+        const match = target.photo_url.match(/\/headshots\/(.+)$/);
+        if (match) {
+          const { data: signed } = await supabase.storage
+            .from("headshots")
+            .createSignedUrl(match[1], 3600);
+          if (signed?.signedUrl) {
+            target = { ...target, photo_url: signed.signedUrl };
+          }
+        }
+      }
     }
   }
 

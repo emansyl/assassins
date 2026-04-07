@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0a0a0a;
+      font-family: 'Courier New', Courier, monospace;
+      color: #e0e0e0;
+    }
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+    .header {
+      color: #00ff41;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .divider {
+      color: #333333;
+      font-size: 12px;
+      margin: 12px 0;
+    }
+    .title {
+      color: #00ff41;
+      font-size: 14px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-align: center;
+      margin: 24px 0;
+      text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+    }
+    .message {
+      color: #e0e0e0;
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 20px 0;
+    }
+    .prompt {
+      color: #00ff41;
+      font-size: 12px;
+    }
+    .code-container {
+      text-align: center;
+      margin: 28px 0;
+      padding: 20px;
+      border: 1px solid #00ff41;
+      box-shadow: 0 0 8px rgba(0, 255, 65, 0.15), inset 0 0 8px rgba(0, 255, 65, 0.05);
+    }
+    .code-label {
+      color: #ffb000;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .code {
+      color: #00ff41;
+      font-size: 32px;
+      letter-spacing: 8px;
+      font-weight: bold;
+      text-shadow: 0 0 15px rgba(0, 255, 65, 0.4);
+    }
+    .warning {
+      color: #ffb000;
+      font-size: 11px;
+      letter-spacing: 1px;
+      margin-top: 24px;
+      line-height: 1.6;
+    }
+    .footer {
+      color: #333333;
+      font-size: 10px;
+      margin-top: 32px;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">&gt; SECTION E OPERATIONS NETWORK</div>
+    <div class="divider">════════════════════════════════════════</div>
+
+    <div class="title">SECURE ACCESS CODE</div>
+
+    <div class="message">
+      <span class="prompt">&gt;</span> A login request has been initiated for your operative account.
+    </div>
+
+    <div class="code-container">
+      <div class="code-label">Verification Code</div>
+      <div class="code">{{ .Token }}</div>
+    </div>
+
+    <div class="message">
+      <span class="prompt">&gt;</span> Enter this code to authenticate your identity.
+    </div>
+
+    <div class="warning">
+      ⚠ THIS CODE EXPIRES IN 10 MINUTES.<br>
+      ⚠ DO NOT SHARE THIS CODE WITH ANYONE.<br>
+      ⚠ IF YOU DID NOT REQUEST THIS, DISREGARD THIS MESSAGE.
+    </div>
+
+    <div class="divider">════════════════════════════════════════</div>
+    <div class="footer">SECTION E OPERATIONS — CLASSIFIED</div>
+  </div>
+</body>
+</html>

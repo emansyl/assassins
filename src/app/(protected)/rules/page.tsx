@@ -4,42 +4,92 @@ import { useState } from "react";
 
 const RULES_SECTIONS = [
   {
-    title: "MISSION OVERVIEW",
-    content: `Each operative is assigned a single target. Your mission is to eliminate your target before they — or someone else — eliminates you. When you eliminate your target, you inherit their target, creating a continuous chain of assignments until only one operative remains.`,
+    title: "OBJECTIVE",
+    content: `Eliminate your assigned target. Don't get eliminated.
+
+When you eliminate your target, you inherit their target.
+
+Last person standing wins the trophy.`,
   },
   {
-    title: "RULES OF ENGAGEMENT",
-    content: `1. Eliminations must be confirmed with a selfie photo of you and your target together.
-2. You may only eliminate your assigned target — no freelance operations.
-3. Eliminations must take place in person. No digital or remote eliminations.
-4. Safe zones: During class, in Aldrich Hall during section, and during official HBS events. All other locations are fair game.
-5. No physical contact is required — a verbal "you're eliminated" with photo evidence is sufficient.
-6. You may use deception, disguises, and allies to locate your target. Creative tactics are encouraged.`,
+    title: "PARTICIPATION",
+    content: `• Everyone is in by default.
+• If you don't want to play, you must volunteer to be eliminated.`,
   },
   {
-    title: "CONFIRMATION PROTOCOL",
-    content: `After eliminating your target:
-1. Take a selfie with your target as proof.
-2. Open the app and tap "CONFIRM ELIMINATION."
-3. Upload the selfie and submit.
-4. Your target will be notified and marked as eliminated.
-5. You will receive your new assignment immediately.`,
+    title: "HOW TO ELIMINATE",
+    content: `• Touch your target with your spoon.
+• It must be clear and undeniable.
+• If their spoon is NOT in their hand → they are out.`,
   },
   {
-    title: "MISSION DEADLINES",
-    content: `Command may set mission deadlines. If a deadline is active, all operatives must complete their current assignment before the deadline expires. Operatives who fail to eliminate their target by the deadline will be automatically deactivated.`,
+    title: "KILL CONFIRMATION",
+    content: `Every elimination must be confirmed:
+
+1. Take a selfie with your target.
+2. You must be holding your spoon.
+3. Post the photo in the group chat.
+4. Feel free to get creative.
+
+If it's not posted, it didn't happen.`,
   },
   {
-    title: "VICTORY CONDITIONS",
-    content: `The last operative standing is declared the winner. The game may also end if Command decides to conclude operations early, in which case the operative with the most eliminations wins.`,
+    title: "AFTER A KILL",
+    content: `• Your target tells you who their target was.
+• That becomes your new target immediately.
+• If there's confusion → ask the game master.`,
   },
   {
-    title: "CODE OF CONDUCT",
-    content: `1. No elimination attempts during exams or official academic activities.
-2. Respect "no" — if your target asks you to stop in a genuine (non-game) context, back off.
-3. No breaking and entering. No accessing locked spaces you don't have permission to enter.
-4. Keep it fun. This is a game. Don't let it interfere with academics or personal boundaries.
-5. The Game Master's decisions are final.`,
+    title: "GAMEPLAY",
+    content: `• The game is always live.
+• You can run, hide, and strategize.
+• Yes, even at parties, outside, or while drunk.`,
+  },
+  {
+    title: "SAFE ZONES",
+    content: `There are only TWO safe conditions:
+
+SAFE TIME — During official class time only
+  • Class ends early → still safe
+  • Class runs late → still safe
+  • Game resumes when we finish clapping
+
+SAFE PLACE — Inside your bedroom only
+  • Outside your door = NOT safe
+
+Everything else is fair game: bathrooms, dorms, restaurants, hallways, etc.`,
+  },
+  {
+    title: "SPOON RULES",
+    content: `• You are only safe if your spoon is IN YOUR HAND.
+• Pocket, bag, or dropped = vulnerable.`,
+  },
+  {
+    title: "TRACKING",
+    content: `• The group chat is used for all kills and updates.
+• The game master will track everything.
+• Additional rules may be added if needed to speed things up.`,
+  },
+  {
+    title: "WINNING",
+    content: `Last person standing wins.
+
+Bonus stats:
+• Most kills
+• Fastest kill
+• Funniest elimination photo`,
+  },
+  {
+    title: "HONOR SYSTEM",
+    content: `• Be honest.
+• No aggression.
+• Don't make it weird — it's just a game.`,
+  },
+  {
+    title: "OTHER NOTES",
+    content: `• Sick or traveling → still in the game. No pausing.
+• Want to quit? You must let your assassin eliminate you.
+• Alliances are allowed… but don't trust anyone.`,
   },
 ];
 
@@ -50,17 +100,17 @@ function RuleSection({ title, content }: { title: string; content: string }) {
     <div className="border border-terminal-dim">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2 p-3 text-left hover:bg-terminal-bg-light transition-colors"
+        className="w-full flex items-center gap-3 p-4 text-left hover:bg-terminal-bg-light transition-colors active:bg-terminal-bg-light"
       >
-        <span className="text-terminal-green text-xs">
-          {open ? "v" : ">"}
+        <span className="text-terminal-green text-base shrink-0">
+          {open ? "▾" : "▸"}
         </span>
-        <span className="text-terminal-green text-xs uppercase tracking-widest flex-1">
+        <span className="text-terminal-green text-sm uppercase tracking-wider flex-1 font-bold">
           {title}
         </span>
       </button>
       {open && (
-        <div className="px-3 pb-3 text-terminal-text text-xs leading-relaxed whitespace-pre-line border-t border-terminal-dim/30 pt-3">
+        <div className="px-4 pb-4 text-terminal-text text-sm leading-relaxed whitespace-pre-line border-t border-terminal-dim/30 pt-3">
           {content}
         </div>
       )}
@@ -70,13 +120,24 @@ function RuleSection({ title, content }: { title: string; content: string }) {
 
 export default function RulesPage() {
   return (
-    <div className="p-4 max-w-lg mx-auto space-y-4">
-      <div className="text-center space-y-1">
-        <div className="text-terminal-green text-sm glow-green tracking-widest">
+    <div className="p-4 max-w-lg mx-auto space-y-5 pb-20">
+      <div className="text-center space-y-2">
+        <div className="text-terminal-green text-base glow-green tracking-widest font-bold">
           FIELD MANUAL
         </div>
-        <div className="text-terminal-dim text-[10px]">
-          OPERATIONS GUIDE — READ BEFORE DEPLOYMENT
+        <div className="text-terminal-dim text-xs tracking-wide">
+          OFFICIAL RULES &amp; GUIDELINES
+        </div>
+        <div className="text-terminal-amber text-xs tracking-wide">
+          GAME START: FRIDAY, END OF SKYDECK
+        </div>
+      </div>
+
+      <div className="border border-terminal-red/50 p-4 text-center">
+        <div className="text-terminal-red text-sm font-bold glow-red leading-relaxed">
+          ELIMINATE YOUR TARGET.
+          <br />
+          DON&apos;T GET ELIMINATED.
         </div>
       </div>
 
@@ -84,6 +145,14 @@ export default function RulesPage() {
         {RULES_SECTIONS.map((section) => (
           <RuleSection key={section.title} {...section} />
         ))}
+      </div>
+
+      <div className="text-center text-terminal-amber text-sm tracking-wider pt-4 glow-amber">
+        GOOD LUCK.
+        <br />
+        STAY READY.
+        <br />
+        TRUST NO ONE.
       </div>
     </div>
   );
