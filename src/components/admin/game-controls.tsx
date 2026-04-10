@@ -7,7 +7,7 @@ import { TerminalButton } from "@/components/ui/terminal-button";
 import { TerminalCard } from "@/components/ui/terminal-card";
 import type { GameState } from "@/types";
 
-export function GameControls({ gameState }: { gameState: GameState }) {
+export function GameControls({ gameState, hasAssignments }: { gameState: GameState; hasAssignments: boolean }) {
   const [loading, setLoading] = useState("");
   const [deadline, setDeadline] = useState("");
   const [confirmAction, setConfirmAction] = useState<string | null>(null);
@@ -106,9 +106,16 @@ export function GameControls({ gameState }: { gameState: GameState }) {
           <div className="flex gap-2 pt-2">
             {gameState.status !== "active" && (
               <TerminalButton
-                onClick={() => confirmAction === "start" ? updateGameStatus("active") : setConfirmAction("start")}
+                onClick={() => {
+                  if (!hasAssignments) {
+                    alert("Generate assignments first before starting the game.");
+                    return;
+                  }
+                  confirmAction === "start" ? updateGameStatus("active") : setConfirmAction("start");
+                }}
                 loading={loading === "active"}
                 className="flex-1"
+                disabled={!hasAssignments && gameState.status === "pending"}
               >
                 {confirmAction === "start" ? "CONFIRM START" : "START GAME"}
               </TerminalButton>

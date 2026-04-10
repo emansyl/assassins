@@ -1,91 +1,72 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createUntypedClient } from "@/lib/supabase/untyped-client";
 import { TerminalButton } from "@/components/ui/terminal-button";
 import { TerminalCard } from "@/components/ui/terminal-card";
+import { verifyKillAnswer } from "@/app/(protected)/dashboard/actions";
 import type { Player } from "@/types";
+
+type VerificationOption = { id: string; full_name: string };
 
 export function KillConfirmation({
   target,
   assassinId,
+  verificationOptions,
+  wrongGuesses,
 }: {
   target: Player;
   assassinId: string;
+  verificationOptions: VerificationOption[];
+  wrongGuesses: number;
 }) {
-  const [open, setOpen] = useState(false);
-  const [selfie, setSelfie] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [notes, setNotes] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [phase, setPhase] = useState<"idle" | "challenge" | "loading" | "success" | "error" | "eliminated">("idle");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [attemptsRemaining, setAttemptsRemaining] = useState(3 - wrongGuesses);
   const router = useRouter();
-  const supabase = createUntypedClient();
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelfie(file);
-      setPreview(URL.createObjectURL(file));
-    }
-  }
+  async function handleSubmit(playerId: string) {
+    setSelectedId(playerId);
+    setPhase("loading");
+    setErrorMsg("");
 
-  async function handleConfirm() {
-    if (!selfie) {
-      setError("VISUAL CONFIRMATION REQUIRED — UPLOAD ELIMINATION SELFIE");
-      return;
-    }
+    const result = await verifyKillAnswer(assassinId, target.id, playerId);
 
-    setLoading(true);
-    setError("");
-
-    try {
-      // Upload selfie to storage
-      const ext = selfie.name.split(".").pop();
-      const path = `${assassinId}/${Date.now()}.${ext}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("kill-selfies")
-        .upload(path, selfie);
-
-      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
-
-      // Get the public URL
-      const { data: urlData } = supabase.storage
-        .from("kill-selfies")
-        .getPublicUrl(path);
-
-      // Call the confirm_kill RPC
-      const { data, error: rpcError } = await supabase.rpc("confirm_kill", {
-        p_assassin_id: assassinId,
-        p_target_id: target.id,
-        p_selfie_url: urlData.publicUrl,
-        p_confirmed_by: "app",
-        p_notes: notes || null,
-      });
-
-      if (rpcError) throw new Error(rpcError.message);
-
-      const result = data as { success: boolean; error?: string };
-      if (!result.success) {
-        throw new Error(result.error || "Kill confirmation failed");
+    if (result.success) {
+      setPhase("success");
+      setTimeout(() => router.refresh(), 2000);
+    } else if (result.eliminated) {
+      setPhase("eliminated");
+      setErrorMsg(result.error || "DEACTIVATED");
+      setTimeout(() => router.refresh(), 3000);
+    } else {
+      setPhase("error");
+      setErrorMsg(result.error || "VERIFICATION FAILED");
+      if (result.attemptsRemaining !== undefined) {
+        setAttemptsRemaining(result.attemptsRemaining);
       }
-
-      setSuccess(true);
-      setTimeout(() => {
-        router.refresh();
-      }, 2000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "SYSTEM ERROR");
-    } finally {
-      setLoading(false);
     }
   }
 
-  if (success) {
+  // Eliminated state
+  if (phase === "eliminated") {
+    return (
+      <TerminalCard title="CRITICAL FAILURE" variant="danger">
+        <div className="text-center py-6 space-y-3">
+          <div className="text-terminal-red text-lg glow-red">
+            YOU HAVE BEEN DEACTIVATED
+          </div>
+          <div className="text-terminal-red text-xs">
+            3 FAILED INTEL CHECKS — AUTO-ELIMINATION TRIGGERED
+          </div>
+        </div>
+      </TerminalCard>
+    );
+  }
+
+  // Success state
+  if (phase === "success") {
     return (
       <TerminalCard title="Confirmation" variant="danger">
         <div className="text-center py-6 space-y-2">
@@ -100,107 +81,120 @@ export function KillConfirmation({
     );
   }
 
-  if (!open) {
+  // Idle state
+  if (phase === "idle") {
     return (
-      <TerminalButton
-        variant="danger"
-        onClick={() => setOpen(true)}
-        className="w-full py-3"
-      >
-        Confirm Elimination
-      </TerminalButton>
+      <div className="space-y-2">
+        <TerminalButton
+          variant="danger"
+          onClick={() => setPhase("challenge")}
+          className="w-full py-3"
+        >
+          Confirm Elimination
+        </TerminalButton>
+        {attemptsRemaining < 3 && (
+          <div className="text-terminal-red text-[10px] text-center animate-pulse">
+            WARNING: {attemptsRemaining} ATTEMPT{attemptsRemaining === 1 ? "" : "S"} REMAINING — NEXT FAILURE MAY BE FATAL
+          </div>
+        )}
+      </div>
     );
   }
 
+  // Challenge / loading / error states
   return (
     <TerminalCard title="Kill Confirmation" variant="danger">
       <div className="space-y-4">
         <div className="text-terminal-red text-xs text-center">
-          CONFIRM ELIMINATION OF TARGET: {target.full_name}
+          CONFIRM ELIMINATION OF: {target.full_name.toUpperCase()}
         </div>
 
-        {/* Selfie upload */}
-        <div className="space-y-2">
-          <div className="text-terminal-dim text-xs uppercase">
-            Visual Confirmation (Required)
-          </div>
+        {/* Attempts warning */}
+        <div className={`text-[10px] text-center border p-2 ${
+          attemptsRemaining <= 1
+            ? "text-terminal-red border-terminal-red/50 bg-terminal-red/5"
+            : "text-terminal-amber border-terminal-amber/30"
+        }`}>
+          {attemptsRemaining} OF 3 ATTEMPTS REMAINING
+          {attemptsRemaining <= 1 && " — NEXT WRONG ANSWER = AUTO-ELIMINATION"}
+        </div>
 
-          {preview ? (
-            <div className="relative">
-              <img
-                src={preview}
-                alt="Kill selfie"
-                className="w-full h-48 object-cover border border-terminal-red/50"
-              />
-              <button
-                onClick={() => {
-                  setSelfie(null);
-                  setPreview(null);
-                }}
-                className="absolute top-1 right-1 text-terminal-red text-xs border border-terminal-red/50 bg-terminal-bg px-2 py-0.5"
-              >
-                X
-              </button>
+        {verificationOptions.length < 2 ? (
+          // Endgame: too few players for a meaningful quiz
+          <div className="space-y-3">
+            <div className="text-terminal-amber text-xs text-center border border-terminal-amber/30 p-2">
+              FINAL ELIMINATION — CONFIRM TO END OPERATIONS
             </div>
-          ) : (
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="w-full h-32 border border-dashed border-terminal-dim flex flex-col items-center justify-center gap-2 hover:border-terminal-red/50 transition-colors"
+            <TerminalButton
+              variant="danger"
+              onClick={() => handleSubmit(verificationOptions[0]?.id ?? "")}
+              loading={phase === "loading"}
+              className="w-full"
             >
-              <span className="text-terminal-dim text-2xl">[+]</span>
-              <span className="text-terminal-dim text-xs">
-                TAP TO CAPTURE ELIMINATION SELFIE
-              </span>
-            </button>
-          )}
-
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            capture="user"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-        </div>
-
-        {/* Notes */}
-        <div className="space-y-1">
-          <div className="text-terminal-dim text-xs uppercase">
-            Field Notes (Optional)
+              Confirm Final Kill
+            </TerminalButton>
           </div>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Mission details..."
-            rows={2}
-            className="w-full bg-terminal-bg border border-terminal-dim p-2 text-sm text-terminal-text font-mono placeholder:text-terminal-dim/50 outline-none focus:border-terminal-green resize-none"
-          />
-        </div>
+        ) : (
+          <>
+            <div className="text-terminal-amber text-xs text-center border border-terminal-amber/30 p-2">
+              INTEL CHECK: WHO IS {target.full_name.toUpperCase()}&apos;S CURRENT TARGET?
+            </div>
 
-        {error && (
-          <div className="text-terminal-red text-xs border border-terminal-red/30 p-2">
-            {error}
+            <div className="space-y-2">
+              {verificationOptions.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => handleSubmit(option.id)}
+                  disabled={phase === "loading"}
+                  className={`
+                    w-full text-left px-4 py-3 border font-mono text-sm
+                    transition-all duration-150
+                    ${selectedId === option.id && phase === "loading"
+                      ? "border-terminal-amber text-terminal-amber bg-terminal-amber/10"
+                      : selectedId === option.id && phase === "error"
+                      ? "border-terminal-red text-terminal-red bg-terminal-red/10"
+                      : "border-terminal-dim text-terminal-text hover:border-terminal-green hover:bg-terminal-green/5"
+                    }
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                  `}
+                >
+                  {option.full_name}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {phase === "loading" && (
+          <div className="text-terminal-amber text-xs text-center animate-pulse">
+            VERIFYING INTEL...
           </div>
         )}
 
-        <div className="flex gap-2">
+        {phase === "error" && (
+          <div className="space-y-3">
+            <div className="text-terminal-red text-xs border border-terminal-red/30 p-2 text-center">
+              {errorMsg}
+            </div>
+            <TerminalButton
+              variant="ghost"
+              onClick={() => { setPhase("challenge"); setSelectedId(null); setErrorMsg(""); }}
+              className="w-full"
+            >
+              Try Again
+            </TerminalButton>
+          </div>
+        )}
+
+        {phase === "challenge" && (
           <TerminalButton
             variant="ghost"
-            onClick={() => setOpen(false)}
-            className="flex-1"
+            onClick={() => setPhase("idle")}
+            className="w-full"
           >
             Abort
           </TerminalButton>
-          <TerminalButton
-            variant="danger"
-            onClick={handleConfirm}
-            loading={loading}
-            className="flex-1"
-          >
-            Confirm Kill
-          </TerminalButton>
-        </div>
+        )}
       </div>
     </TerminalCard>
   );

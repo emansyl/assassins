@@ -7,11 +7,12 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
 
-  if (!user) redirect("/");
+  if (!claims?.sub) redirect("/");
 
-  const userEmail = user.email || user.user_metadata?.email;
+  const userEmail = claims.email as string | undefined;
   if (userEmail !== process.env.GAME_MASTER_EMAIL) {
     redirect("/dashboard");
   }

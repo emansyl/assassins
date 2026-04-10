@@ -66,7 +66,7 @@ export default async function AdminPage() {
       <div className="grid md:grid-cols-2 gap-6">
         {/* Left column */}
         <div className="space-y-4">
-          <GameControls gameState={gameState} />
+          <GameControls gameState={gameState} hasAssignments={assignments.length > 0} />
           <AssignmentChain assignments={assignmentsWithNames} />
         </div>
 
@@ -75,7 +75,7 @@ export default async function AdminPage() {
           <TerminalCard title="Player Management">
             <PlayerManagement players={players} />
           </TerminalCard>
-          <KillOverride players={players} />
+          <KillOverride players={players} assignments={assignments} />
           <BroadcastComposer players={players} />
         </div>
       </div>

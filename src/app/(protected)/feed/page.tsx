@@ -8,7 +8,6 @@ export default async function FeedPage() {
     id: string;
     confirmed_at: string;
     confirmed_by: string;
-    selfie_url: string | null;
     notes: string | null;
     assassin: { full_name: string; nickname: string | null } | null;
     target: { full_name: string; nickname: string | null } | null;
@@ -20,7 +19,6 @@ export default async function FeedPage() {
       id,
       confirmed_at,
       confirmed_by,
-      selfie_url,
       notes,
       assassin:players!kills_assassin_id_fkey(full_name, nickname),
       target:players!kills_target_id_fkey(full_name, nickname)
@@ -70,15 +68,6 @@ export default async function FeedPage() {
                       </span>
                     </div>
                   </div>
-
-                  {/* Selfie */}
-                  {kill.selfie_url && (
-                    <img
-                      src={kill.selfie_url}
-                      alt="Kill confirmation"
-                      className="w-full h-48 object-cover border border-terminal-dim grayscale hover:grayscale-0 transition-all"
-                    />
-                  )}
 
                   {/* Notes */}
                   {kill.notes && (
