@@ -1,7 +1,7 @@
 import { TerminalCard } from "@/components/ui/terminal-card";
 import type { Player } from "@/types";
 
-export function TargetDossier({ target }: { target: Player | null }) {
+export function TargetDossier({ target, spoonCollected }: { target: Player | null; spoonCollected: boolean }) {
   if (!target) {
     return (
       <TerminalCard title="Current Assignment">
@@ -54,8 +54,16 @@ export function TargetDossier({ target }: { target: Player | null }) {
             <span className="text-terminal-green">ACTIVE</span>
           </div>
           <div className="flex justify-between text-xs">
+            <span className="text-terminal-dim">SPOON:</span>
+            <span className={spoonCollected ? "text-terminal-green" : "text-terminal-amber"}>
+              {spoonCollected ? "COLLECTED" : "NOT COLLECTED"}
+            </span>
+          </div>
+          <div className="flex justify-between text-xs">
             <span className="text-terminal-dim">CLASSIFICATION:</span>
-            <span className="text-terminal-amber">ELIMINATE ON SIGHT</span>
+            <span className={spoonCollected ? "text-terminal-amber" : "text-terminal-dim"}>
+              {spoonCollected ? "ELIMINATE ON SIGHT" : "NOT YET ELIGIBLE"}
+            </span>
           </div>
         </div>
       </div>

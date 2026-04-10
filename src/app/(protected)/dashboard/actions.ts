@@ -39,6 +39,17 @@ export async function verifyKillAnswer(
 
   const assignment = assassinAssignment as { id: string; wrong_guesses: number };
 
+  // Verify target has collected their spoon
+  const { data: targetPlayer } = await supabase
+    .from("players")
+    .select("spoon_collected")
+    .eq("id", targetId)
+    .single();
+
+  if (!(targetPlayer as { spoon_collected: boolean } | null)?.spoon_collected) {
+    return { success: false, error: "TARGET HAS NOT COLLECTED SPOON — CANNOT ELIMINATE" };
+  }
+
   // Look up the target's active assignment (target's target = correct answer)
   const { data: targetAssignment } = await supabase
     .from("assignments")

@@ -1,0 +1,13 @@
+{
+  "name": "Section E Operations",
+  "short_name": "Assassins",
+  "description": "HBS Section E Assassins Game",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#00ff41",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

@@ -7,7 +7,7 @@ const navItems = [
   { href: "/dashboard", label: "MISSION", icon: ">" },
   { href: "/leaderboard", label: "RANKS", icon: "#" },
   { href: "/rules", label: "INTEL", icon: "?" },
-  { href: "/messages", label: "COMMS", icon: "@" },
+  { href: "/feed", label: "FEED", icon: "!" },
 ] as const;
 
 export function BottomNav() {

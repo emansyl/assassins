@@ -60,6 +60,24 @@ export function GameControls({ gameState, hasAssignments }: { gameState: GameSta
     }
   }
 
+  async function resetGame() {
+    setLoading("reset");
+    const { data, error } = await supabase.rpc("reset_game");
+    setLoading("");
+    setConfirmAction(null);
+    router.refresh();
+    if (error) {
+      alert(`Error: ${error.message}`);
+    } else {
+      const result = data as { success: boolean; players_reset?: number; error?: string } | null;
+      if (result?.success) {
+        alert(`Game reset. ${result.players_reset} players restored to initial state.`);
+      } else {
+        alert(`Failed: ${result?.error}`);
+      }
+    }
+  }
+
   async function generateAssignments() {
     setLoading("generate");
     const { data, error } = await supabase.rpc("generate_assignments");
@@ -156,6 +174,33 @@ export function GameControls({ gameState, hasAssignments }: { gameState: GameSta
         </TerminalButton>
       </TerminalCard>
 
+
+      {/* Reset Game */}
+      <TerminalCard title="Reset Game" variant="danger">
+        <div className="space-y-3">
+          <div className="text-terminal-dim text-[10px]">
+            WIPES ALL KILLS, ASSIGNMENTS, AND RESETS ALL PLAYERS TO INITIAL STATE.
+            ONBOARDING WILL BE REQUIRED AGAIN. THIS CANNOT BE UNDONE.
+          </div>
+          <TerminalButton
+            variant="danger"
+            onClick={() => confirmAction === "reset" ? resetGame() : setConfirmAction("reset")}
+            loading={loading === "reset"}
+            className="w-full"
+          >
+            {confirmAction === "reset" ? "⚠ CONFIRM FULL RESET ⚠" : "RESET GAME"}
+          </TerminalButton>
+          {confirmAction === "reset" && (
+            <TerminalButton
+              variant="ghost"
+              onClick={() => setConfirmAction(null)}
+              className="w-full"
+            >
+              CANCEL
+            </TerminalButton>
+          )}
+        </div>
+      </TerminalCard>
 
       {/* Deadline */}
       <TerminalCard title="Mission Deadline" variant="warning">

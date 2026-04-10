@@ -34,7 +34,7 @@ export function RankingsTable({
   }
 
   const sorted = [...entries].sort((a, b) => {
-    const dir = sortAsc ? 1 : -1;
+    const dir = sortAsc ? -1 : 1;
     if (sortKey === "kill_count") return (b.kill_count - a.kill_count) * dir;
     if (sortKey === "status") return a.status.localeCompare(b.status) * dir;
     return a.full_name.localeCompare(b.full_name) * dir;

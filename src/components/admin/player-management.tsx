@@ -10,6 +10,7 @@ import type { Player } from "@/types";
 export function PlayerManagement({ players }: { players: Player[] }) {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState<string | null>(null);
+  const [spoonLoading, setSpoonLoading] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createUntypedClient();
 
@@ -82,6 +83,16 @@ export function PlayerManagement({ players }: { players: Player[] }) {
     router.refresh();
   }
 
+  async function toggleSpoon(playerId: string, currentValue: boolean) {
+    setSpoonLoading(playerId);
+    await supabase
+      .from("players")
+      .update({ spoon_collected: !currentValue })
+      .eq("id", playerId);
+    setSpoonLoading(null);
+    router.refresh();
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 border border-terminal-dim bg-terminal-bg px-3 py-2">
@@ -119,6 +130,16 @@ export function PlayerManagement({ players }: { players: Player[] }) {
 
             <div className="flex items-center gap-2 flex-shrink-0">
               <span className="text-terminal-green text-[10px]">{player.kill_count}K</span>
+              <button
+                onClick={() => toggleSpoon(player.id, player.spoon_collected)}
+                disabled={spoonLoading === player.id}
+                title={player.spoon_collected ? "Spoon collected — click to revoke" : "No spoon — click to mark collected"}
+                className={`text-[10px] px-1 cursor-pointer ${
+                  spoonLoading === player.id ? "opacity-50" : ""
+                } ${player.spoon_collected ? "text-terminal-green" : "text-terminal-dim"}`}
+              >
+                {player.spoon_collected ? "🥄" : "✗"}
+              </button>
               <TerminalBadge variant={player.status === "alive" ? "active" : "eliminated"}>
                 {player.status === "alive" ? "ACTIVE" : "KIA"}
               </TerminalBadge>

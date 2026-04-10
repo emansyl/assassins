@@ -5,6 +5,7 @@ import { KillConfirmation } from "@/components/dashboard/kill-confirmation";
 import { PlayerStatsBar } from "@/components/dashboard/player-stats-bar";
 import { EliminatedScreen } from "@/components/dashboard/eliminated-screen";
 import { DeadlineCountdown } from "@/components/ui/deadline-countdown";
+import { InstallPrompt } from "@/components/ui/install-prompt";
 import type { Player, GameState } from "@/types";
 
 export default async function DashboardPage() {
@@ -38,6 +39,9 @@ export default async function DashboardPage() {
   if (!playerRes.data) redirect("/");
 
   const p = playerRes.data as Player;
+
+  // Gate behind onboarding
+  if (!p.onboarding_complete) redirect("/onboarding");
   const gs = gameStateRes.data as GameState | null;
   const assignmentData = assignmentRes.data as { target_id: string; wrong_guesses: number } | null;
   // Fetch target + signed headshot URL in parallel (if alive and assigned)
@@ -138,6 +142,9 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      {/* Install prompt */}
+      <InstallPrompt />
+
       {/* Stats */}
       {gs && <PlayerStatsBar player={p} gameState={gs} />}
 
@@ -179,11 +186,20 @@ export default async function DashboardPage() {
       {/* Target dossier (show when assigned, regardless of game status) */}
       {p.status === "alive" && (
         <>
-          <TargetDossier target={target} />
+          <TargetDossier target={target} spoonCollected={target?.spoon_collected ?? false} />
 
-          {/* Kill confirmation (only when game is active) */}
-          {target && gs?.status === "active" && (
+          {/* Kill confirmation (only when game is active and target has spoon) */}
+          {target && gs?.status === "active" && target.spoon_collected && (
             <KillConfirmation key={target.id} target={target} assassinId={userId} verificationOptions={verificationOptions} wrongGuesses={assignmentData?.wrong_guesses ?? 0} />
+          )}
+
+          {/* Target hasn't collected spoon */}
+          {target && gs?.status === "active" && !target.spoon_collected && (
+            <div className="text-center text-terminal-amber text-xs border border-terminal-amber/30 p-4">
+              TARGET HAS NOT COLLECTED THEIR SPOON.
+              <br />
+              ELIMINATION NOT PERMITTED UNTIL SPOON IS ACQUIRED.
+            </div>
           )}
         </>
       )}

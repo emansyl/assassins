@@ -16,6 +16,9 @@ export type Player = {
   eliminated_at: string | null;
   eliminated_by: string | null;
   created_at: string;
+  onboarding_complete: boolean;
+  rules_accepted_at: string | null;
+  spoon_collected: boolean;
 };
 
 export type Assignment = {

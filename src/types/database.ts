@@ -48,6 +48,9 @@ players: {
           eliminated_at: string | null;
           eliminated_by: string | null;
           created_at: string;
+          onboarding_complete: boolean;
+          rules_accepted_at: string | null;
+          spoon_collected: boolean;
         };
         Insert: {
           id?: string;
@@ -61,6 +64,9 @@ players: {
           eliminated_at?: string | null;
           eliminated_by?: string | null;
           created_at?: string;
+          onboarding_complete?: boolean;
+          rules_accepted_at?: string | null;
+          spoon_collected?: boolean;
         };
         Update: {
           id?: string;
@@ -74,6 +80,9 @@ players: {
           eliminated_at?: string | null;
           eliminated_by?: string | null;
           created_at?: string;
+          onboarding_complete?: boolean;
+          rules_accepted_at?: string | null;
+          spoon_collected?: boolean;
         };
       };
       assignments: {
