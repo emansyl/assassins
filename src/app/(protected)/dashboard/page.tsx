@@ -10,10 +10,13 @@ import type { Player, GameState } from "@/types";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data: claimsData } = await supabase.auth.getClaims();
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
   const claims = claimsData?.claims;
 
-  if (!claims?.sub) redirect("/");
+  if (!claims?.sub) {
+    if (claimsError) await supabase.auth.signOut();
+    redirect("/");
+  }
   const userId = claims.sub as string;
 
   // Fetch player, game state, and active assignment in parallel

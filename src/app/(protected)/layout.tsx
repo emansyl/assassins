@@ -9,10 +9,15 @@ export default async function ProtectedLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
+  const { data, error } = await supabase.auth.getClaims();
   const claims = data?.claims;
 
   if (!claims?.sub) {
+    // If there's an expired/corrupt session, sign out to clear stale cookies
+    // and break the redirect loop (middleware thinks we're auth'd, but we're not)
+    if (error) {
+      await supabase.auth.signOut();
+    }
     redirect("/");
   }
 

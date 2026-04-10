@@ -23,6 +23,7 @@ export const metadata: Metadata = {
     title: "Assassins",
   },
   icons: {
+    icon: "/icon.svg",
     apple: "/icons/icon-192.png",
   },
 };
