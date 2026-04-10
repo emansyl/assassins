@@ -9,57 +9,55 @@ import type { Player, GameState } from "@/types";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
 
-  if (!user) redirect("/");
+  if (!claims?.sub) redirect("/");
+  const userId = claims.sub as string;
 
-  // Fetch player profile
-  const { data: player } = await supabase
-    .from("players")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+  // Fetch player, game state, and active assignment in parallel
+  const playerPromise = supabase.from("players").select("*").eq("id", userId).single();
+  const gameStatePromise = supabase.from("game_state").select("*").eq("id", 1).single();
+  const assignmentPromise = supabase
+    .from("assignments")
+    .select("target_id")
+    .eq("assassin_id", userId)
+    .eq("status", "active")
+    .maybeSingle();
 
-  if (!player) redirect("/");
+  const [playerRes, gameStateRes, assignmentRes] = (await Promise.all([
+    playerPromise,
+    gameStatePromise,
+    assignmentPromise,
+  ])) as [
+    { data: Player | null },
+    { data: GameState | null },
+    { data: { target_id: string } | null },
+  ];
 
-  // Fetch game state
-  const { data: gameState } = await supabase
-    .from("game_state")
-    .select("*")
-    .eq("id", 1)
-    .single();
+  if (!playerRes.data) redirect("/");
 
-  const gs = gameState as GameState | null;
-  const p = player as Player;
-
-  // Fetch current assignment + target
+  const p = playerRes.data as Player;
+  const gs = gameStateRes.data as GameState | null;
+  const assignmentData = assignmentRes.data as { target_id: string } | null;
+  // Fetch target + signed headshot URL in parallel (if alive and assigned)
   let target: Player | null = null;
-  if (p.status === "alive") {
-    const { data: assignment } = await supabase
-      .from("assignments")
-      .select("target_id")
-      .eq("assassin_id", user.id)
-      .eq("status", "active")
-      .single() as { data: { target_id: string } | null };
+  if (p.status === "alive" && assignmentData?.target_id) {
+    const { data: targetData } = await supabase
+      .from("players")
+      .select("*")
+      .eq("id", assignmentData.target_id)
+      .single();
+    target = targetData as Player | null;
 
-    if (assignment) {
-      const { data: targetData } = await supabase
-        .from("players")
-        .select("*")
-        .eq("id", assignment.target_id)
-        .single();
-      target = targetData as Player | null;
-
-      // Generate signed URL for headshot (bucket is private)
-      if (target?.photo_url) {
-        const match = target.photo_url.match(/\/headshots\/(.+)$/);
-        if (match) {
-          const { data: signed } = await supabase.storage
-            .from("headshots")
-            .createSignedUrl(match[1], 3600);
-          if (signed?.signedUrl) {
-            target = { ...target, photo_url: signed.signedUrl };
-          }
+    if (target?.photo_url) {
+      const match = target.photo_url.match(/\/headshots\/(.+)$/);
+      if (match) {
+        const { data: signed } = await supabase.storage
+          .from("headshots")
+          .createSignedUrl(match[1], 3600);
+        if (signed?.signedUrl) {
+          target = { ...target, photo_url: signed.signedUrl };
         }
       }
     }
@@ -106,7 +104,7 @@ export default async function DashboardPage() {
 
           {/* Kill confirmation */}
           {target && gs?.status === "active" && (
-            <KillConfirmation target={target} assassinId={user.id} />
+            <KillConfirmation target={target} assassinId={userId} />
           )}
         </>
       )}

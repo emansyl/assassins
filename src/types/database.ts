@@ -35,39 +35,7 @@ export type Database = {
           deadline?: string | null;
         };
       };
-      player_seeds: {
-        Row: {
-          id: string;
-          email: string;
-          full_name: string;
-          photo_url: string | null;
-          phone: string | null;
-          claimed: boolean;
-          claimed_at: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          email: string;
-          full_name: string;
-          photo_url?: string | null;
-          phone?: string | null;
-          claimed?: boolean;
-          claimed_at?: string | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          email?: string;
-          full_name?: string;
-          photo_url?: string | null;
-          phone?: string | null;
-          claimed?: boolean;
-          claimed_at?: string | null;
-          created_at?: string;
-        };
-      };
-      players: {
+players: {
         Row: {
           id: string;
           email: string;

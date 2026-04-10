@@ -13,20 +13,3 @@ export function createAdminClient() {
     }
   );
 }
-
-/**
- * Admin client without strict Database types.
- * Used for tables where RLS-typed generics generate `never` (e.g. player_seeds).
- */
-export function createUntypedAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  );
-}

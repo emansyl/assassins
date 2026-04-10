@@ -149,6 +149,7 @@ export function GameControls({ gameState }: { gameState: GameState }) {
         </TerminalButton>
       </TerminalCard>
 
+
       {/* Deadline */}
       <TerminalCard title="Mission Deadline" variant="warning">
         <div className="space-y-3">

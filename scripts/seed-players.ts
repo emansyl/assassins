@@ -125,27 +125,52 @@ async function main() {
       continue;
     }
 
-    // Get public URL
+    // Get public URL (bucket is private; this is just a stable reference string)
     const { data: urlData } = supabase.storage
       .from("headshots")
       .getPublicUrl(storagePath);
 
-    // Upsert into player_seeds
-    const { error: dbError } = await supabase
-      .from("player_seeds")
-      .upsert(
-        {
-          email,
-          full_name: fullName,
-          photo_url: urlData.publicUrl,
-        },
-        { onConflict: "email" }
-      );
+    const metadata = {
+      full_name: fullName,
+      photo_url: urlData.publicUrl,
+    };
 
-    if (dbError) {
-      console.error(`  ✗ ${label} — db insert failed: ${dbError.message}`);
-      failed++;
-      continue;
+    // Create auth user (or update if already exists)
+    const { error: createError } = await supabase.auth.admin.createUser({
+      email,
+      email_confirm: true,
+      user_metadata: metadata,
+    });
+
+    if (createError) {
+      const msg = createError.message.toLowerCase();
+      if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
+        // Look up existing user and refresh metadata + players row
+        const { data: list } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+        const existing = list?.users.find((u) => u.email?.toLowerCase() === email);
+        if (!existing) {
+          console.error(`  ✗ ${label} — user exists but lookup failed`);
+          failed++;
+          continue;
+        }
+        const { error: updateError } = await supabase.auth.admin.updateUserById(existing.id, {
+          user_metadata: metadata,
+        });
+        if (updateError) {
+          console.error(`  ✗ ${label} — metadata update failed: ${updateError.message}`);
+          failed++;
+          continue;
+        }
+        // Also refresh the players row (trigger only fires on insert)
+        await supabase
+          .from("players")
+          .update({ full_name: fullName, photo_url: urlData.publicUrl })
+          .eq("id", existing.id);
+      } else {
+        console.error(`  ✗ ${label} — createUser failed: ${createError.message}`);
+        failed++;
+        continue;
+      }
     }
 
     console.log(`  ✓ ${label}`);
