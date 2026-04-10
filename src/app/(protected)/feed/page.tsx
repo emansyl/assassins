@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { TerminalCard } from "@/components/ui/terminal-card";
+import { getKillMessage } from "@/lib/kill-messages";
+import type { KillType } from "@/lib/kill-messages";
 
 function timeAgo(dateStr: string): string {
   const now = Date.now();
@@ -11,6 +12,12 @@ function timeAgo(dateStr: string): string {
   if (diff < 86400) return `${Math.floor(diff / 3600)}H AGO`;
   if (diff < 604800) return `${Math.floor(diff / 86400)}D AGO`;
   return new Date(dateStr).toLocaleDateString();
+}
+
+function getType(confirmedBy: string, notes: string | null): KillType {
+  if (confirmedBy === "self") return "self";
+  if (notes?.includes("AUTO-ELIMINATION") || confirmedBy === "auto") return "auto";
+  return "kill";
 }
 
 export default async function FeedPage() {
@@ -98,22 +105,51 @@ export default async function FeedPage() {
           {kills.map((kill, idx) => {
             const { assassin, target } = kill;
             const isLatest = idx === 0;
+            const type = getType(kill.confirmed_by, kill.notes);
+
+            const assassinName = assassin?.full_name ?? "Unknown";
+            const targetName = target?.full_name ?? "Unknown";
+            const funnyMessage = getKillMessage(kill.id, type, assassinName, targetName);
+
+            const borderColor =
+              type === "self"
+                ? "border-terminal-amber"
+                : type === "auto"
+                ? "border-terminal-dim"
+                : isLatest
+                ? "border-terminal-red"
+                : "border-terminal-dim/30";
+
+            const bgColor =
+              type === "self"
+                ? "bg-terminal-amber/5"
+                : type === "auto"
+                ? "bg-terminal-dim/5"
+                : isLatest
+                ? "bg-terminal-red/5"
+                : "";
 
             return (
               <div
                 key={kill.id}
-                className={`
-                  border-l-2 pl-3 py-2
-                  ${isLatest
-                    ? "border-terminal-red bg-terminal-red/5"
-                    : "border-terminal-dim/30"
-                  }
-                `}
+                className={`border-l-2 pl-3 py-2 ${borderColor} ${bgColor}`}
               >
                 {/* Kill number + timestamp */}
                 <div className="flex items-center justify-between mb-1">
-                  <span className={`text-[10px] font-bold ${isLatest ? "text-terminal-red" : "text-terminal-dim"}`}>
-                    KILL #{totalKills - idx}
+                  <span className={`text-[10px] font-bold ${
+                    type === "self"
+                      ? "text-terminal-amber"
+                      : type === "auto"
+                      ? "text-terminal-dim"
+                      : isLatest
+                      ? "text-terminal-red"
+                      : "text-terminal-dim"
+                  }`}>
+                    {type === "self"
+                      ? "DROPOUT"
+                      : type === "auto"
+                      ? "SYSTEM"
+                      : `KILL #${totalKills - idx}`}
                   </span>
                   <span className="text-terminal-dim text-[10px]">
                     {timeAgo(kill.confirmed_at)}
@@ -121,22 +157,42 @@ export default async function FeedPage() {
                 </div>
 
                 {/* Kill event */}
-                <div className="text-xs">
-                  <span className="text-terminal-green font-bold">
-                    {assassin?.full_name ?? "Unknown"}
-                  </span>
-                  <span className="text-terminal-red mx-2">✕</span>
-                  <span className="text-terminal-red line-through opacity-75">
-                    {target?.full_name ?? "Unknown"}
-                  </span>
-                </div>
-
-                {/* Notes */}
-                {kill.notes && (
-                  <div className="text-terminal-muted text-[10px] italic mt-1">
-                    &quot;{kill.notes}&quot;
+                {type === "kill" && (
+                  <div className="text-xs">
+                    <span className="text-terminal-green font-bold">
+                      {assassinName}
+                    </span>
+                    <span className="text-terminal-red mx-2">✕</span>
+                    <span className="text-terminal-red line-through opacity-75">
+                      {targetName}
+                    </span>
                   </div>
                 )}
+
+                {type === "self" && (
+                  <div className="text-xs text-terminal-amber">
+                    <span className="line-through opacity-75">{targetName}</span>
+                    <span className="ml-2 text-terminal-dim">VOLUNTARY</span>
+                  </div>
+                )}
+
+                {type === "auto" && (
+                  <div className="text-xs text-terminal-dim">
+                    <span className="line-through opacity-75">{targetName}</span>
+                    <span className="ml-2">AUTO-ELIMINATED</span>
+                  </div>
+                )}
+
+                {/* Funny message */}
+                <div className={`text-[10px] italic mt-1 break-words ${
+                  type === "self"
+                    ? "text-terminal-amber/70"
+                    : type === "auto"
+                    ? "text-terminal-dim/70"
+                    : "text-terminal-muted"
+                }`}>
+                  &quot;{funnyMessage}&quot;
+                </div>
               </div>
             );
           })}

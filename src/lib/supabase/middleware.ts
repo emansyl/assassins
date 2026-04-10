@@ -41,7 +41,8 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/messages") ||
     pathname.startsWith("/leaderboard") ||
     pathname.startsWith("/feed") ||
-    pathname.startsWith("/onboarding");
+    pathname.startsWith("/onboarding") ||
+    pathname.startsWith("/profile");
 
   const isAdminRoute = pathname.startsWith("/admin");
   const isLoginPage = pathname === "/";

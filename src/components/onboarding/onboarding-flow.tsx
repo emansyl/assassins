@@ -47,6 +47,9 @@ export function OnboardingFlow({ playerName }: { playerName: string }) {
         <div className="text-terminal-dim text-xs">
           COMPLETE BRIEFING TO ACCESS OPERATIONS
         </div>
+        <div className="text-terminal-red text-[10px] italic">
+          The reason you have to fill this out again is Ashvin.
+        </div>
       </div>
 
       {/* Step indicator */}

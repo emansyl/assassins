@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const MAX_WRONG_GUESSES = 3;
 
@@ -80,6 +81,17 @@ export async function verifyKillAnswer(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase.rpc as any)("auto_eliminate_failed_assassin", {
         p_player_id: assassinId,
+      });
+
+      // Insert kill record for the feed (auto type)
+      const admin = createAdminClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (admin.from("kills") as any).insert({
+        assassin_id: assassinId,
+        target_id: assassinId,
+        confirmed_at: new Date().toISOString(),
+        confirmed_by: "auto",
+        notes: "AUTO-ELIMINATION: 3 failed verification attempts",
       });
 
       return {
