@@ -23,9 +23,15 @@ export function OnboardingFlow({ playerName }: { playerName: string }) {
 
   async function handleSpoonChoice(hasSpoon: boolean) {
     setLoading(true);
-    await completeOnboarding(hasSpoon);
-    setLoading(false);
-    router.push("/dashboard");
+    const result = await completeOnboarding(hasSpoon);
+    if (!result.success) {
+      setLoading(false);
+      // Force a full page reload to get a fresh session
+      window.location.href = "/onboarding";
+      return;
+    }
+    // Full navigation to ensure server re-renders with updated data
+    window.location.href = "/dashboard";
   }
 
   return (

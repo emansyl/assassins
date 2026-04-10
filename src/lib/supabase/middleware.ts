@@ -40,7 +40,8 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/admin") ||
     pathname.startsWith("/messages") ||
     pathname.startsWith("/leaderboard") ||
-    pathname.startsWith("/feed");
+    pathname.startsWith("/feed") ||
+    pathname.startsWith("/onboarding");
 
   const isAdminRoute = pathname.startsWith("/admin");
   const isLoginPage = pathname === "/";
