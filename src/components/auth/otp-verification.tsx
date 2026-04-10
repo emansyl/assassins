@@ -84,8 +84,10 @@ export function OtpVerification({
       return;
     }
 
-    router.push("/dashboard");
-    router.refresh();
+    // Full page navigation ensures cookies are committed before the server
+    // renders the dashboard. router.push() on iOS Chrome can navigate before
+    // the auth cookies from verifyOtp are flushed, causing a redirect loop.
+    window.location.href = "/dashboard";
   }
 
   async function resendCode() {
