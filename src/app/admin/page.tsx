@@ -11,23 +11,35 @@ export default async function AdminPage() {
   const supabase = await createClient();
 
   // Fetch all data in parallel
-  const [gameStateRes, playersRes, assignmentsRes, killsRes] = await Promise.all([
-    supabase.from("game_state").select("*").eq("id", 1).single(),
-    supabase.from("players").select("*").order("created_at"),
-    supabase
-      .from("assignments")
-      .select("id, assassin_id, target_id")
-      .eq("status", "active"),
-    supabase
-      .from("kills")
-      .select("*")
-      .order("confirmed_at", { ascending: false })
-      .limit(10),
-  ]);
+  const [gameStateRes, playersRes, assignmentsRes, killsRes] =
+    await Promise.all([
+      supabase.from("game_state").select("*").eq("id", 1).single(),
+      supabase.from("players").select("*").order("created_at"),
+      supabase
+        .from("assignments")
+        .select("id, assassin_id, target_id")
+        .eq("status", "active"),
+      supabase
+        .from("kills")
+        .select("*")
+        .order("confirmed_at", { ascending: false })
+        .limit(10),
+    ]);
 
-  const gameState = (gameStateRes.data ?? { id: 1, status: "pending", started_at: null, current_round: 1, players_remaining: 0, deadline: null }) as GameState;
-  const players = ((playersRes.data ?? []) as unknown as Player[]);
-  const assignments = (assignmentsRes.data ?? []) as Array<{ id: string; assassin_id: string; target_id: string }>;
+  const gameState = (gameStateRes.data ?? {
+    id: 1,
+    status: "pending",
+    started_at: null,
+    current_round: 1,
+    players_remaining: 0,
+    deadline: null,
+  }) as GameState;
+  const players = (playersRes.data ?? []) as unknown as Player[];
+  const assignments = (assignmentsRes.data ?? []) as Array<{
+    id: string;
+    assassin_id: string;
+    target_id: string;
+  }>;
 
   // Build assignment chain with names
   const playerMap = new Map(players.map((p) => [p.id, p.full_name]));
@@ -49,15 +61,35 @@ export default async function AdminPage() {
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {[
-          { label: "TOTAL OPERATIVES", value: totalPlayers, color: "text-terminal-text" },
-          { label: "ACTIVE", value: activePlayers, color: "text-terminal-green" },
-          { label: "ELIMINATED", value: totalPlayers - activePlayers, color: "text-terminal-red" },
-          { label: "TOTAL KILLS", value: totalKills, color: "text-terminal-amber" },
+          {
+            label: "TOTAL OPERATIVES ",
+            value: totalPlayers,
+            color: "text-terminal-text",
+          },
+          {
+            label: "ACTIVE",
+            value: activePlayers,
+            color: "text-terminal-green",
+          },
+          {
+            label: "ELIMINATED",
+            value: totalPlayers - activePlayers,
+            color: "text-terminal-red",
+          },
+          {
+            label: "TOTAL KILLS",
+            value: totalKills,
+            color: "text-terminal-amber",
+          },
         ].map((stat) => (
           <TerminalCard key={stat.label}>
             <div className="text-center">
-              <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
-              <div className="text-terminal-dim text-[10px] tracking-widest">{stat.label}</div>
+              <div className={`text-2xl font-bold ${stat.color}`}>
+                {stat.value}
+              </div>
+              <div className="text-terminal-dim text-[10px] tracking-widest">
+                {stat.label}
+              </div>
             </div>
           </TerminalCard>
         ))}
@@ -66,7 +98,10 @@ export default async function AdminPage() {
       <div className="grid md:grid-cols-2 gap-6">
         {/* Left column */}
         <div className="space-y-4">
-          <GameControls gameState={gameState} hasAssignments={assignments.length > 0} />
+          <GameControls
+            gameState={gameState}
+            hasAssignments={assignments.length > 0}
+          />
           <AssignmentChain assignments={assignmentsWithNames} />
         </div>
 
