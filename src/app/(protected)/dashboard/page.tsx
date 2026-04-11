@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { TargetDossier } from "@/components/dashboard/target-dossier";
 import { KillConfirmation } from "@/components/dashboard/kill-confirmation";
 import { PlayerStatsBar } from "@/components/dashboard/player-stats-bar";
@@ -74,7 +75,9 @@ export default async function DashboardPage() {
   let verificationOptions: { id: string; full_name: string }[] = [];
   if (p.status === "alive" && assignmentData?.target_id && gs?.status === "active" && target) {
     // Get the target's target (correct answer)
-    const { data: targetAssignment } = await supabase
+    // Uses admin client to bypass RLS — regular players can only see their own assignment
+    const admin = createAdminClient();
+    const { data: targetAssignment } = await admin
       .from("assignments")
       .select("target_id")
       .eq("assassin_id", assignmentData.target_id)

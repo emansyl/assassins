@@ -52,7 +52,9 @@ export async function verifyKillAnswer(
   }
 
   // Look up the target's active assignment (target's target = correct answer)
-  const { data: targetAssignment } = await supabase
+  // Uses admin client to bypass RLS — regular players can only see their own assignment
+  const admin = createAdminClient();
+  const { data: targetAssignment } = await admin
     .from("assignments")
     .select("target_id")
     .eq("assassin_id", targetId)
