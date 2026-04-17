@@ -1,7 +1,17 @@
+"use client";
+
+import { useState } from "react";
 import { TerminalCard } from "@/components/ui/terminal-card";
 import type { Player } from "@/types";
 
+// Replace non-space chars with block char for redacted text
+function censor(text: string): string {
+  return text.replace(/\S/g, "█");
+}
+
 export function TargetDossier({ target, spoonCollected }: { target: Player | null; spoonCollected: boolean }) {
+  const [revealed, setRevealed] = useState(false);
+
   if (!target) {
     return (
       <TerminalCard title="Current Assignment">
@@ -26,7 +36,9 @@ export function TargetDossier({ target, spoonCollected }: { target: Player | nul
             <img
               src={target.photo_url}
               alt="Target"
-              className="w-24 h-24 object-cover border border-terminal-red/50 grayscale"
+              className={`w-24 h-24 object-cover border border-terminal-red/50 grayscale transition-all duration-300 ${
+                revealed ? "" : "blur-2xl"
+              }`}
             />
           ) : (
             <div className="w-24 h-24 border border-terminal-dim flex items-center justify-center">
@@ -37,15 +49,26 @@ export function TargetDossier({ target, spoonCollected }: { target: Player | nul
 
         {/* Target info */}
         <div className="text-center space-y-2">
-          <div className="text-terminal-red text-lg font-bold glow-red">
-            {target.full_name}
+          <div
+            className="text-terminal-red text-lg font-bold glow-red font-mono select-none"
+            aria-label={revealed ? target.full_name : "Target name redacted"}
+          >
+            {revealed ? target.full_name : censor(target.full_name)}
           </div>
           {target.nickname && (
-            <div className="text-terminal-muted text-xs">
-              AKA &quot;{target.nickname}&quot;
+            <div className="text-terminal-muted text-xs font-mono select-none">
+              AKA &quot;{revealed ? target.nickname : censor(target.nickname)}&quot;
             </div>
           )}
         </div>
+
+        {/* Reveal / Hide button */}
+        <button
+          onClick={() => setRevealed((r) => !r)}
+          className="w-full border border-terminal-red/50 px-4 py-2 text-xs uppercase tracking-widest font-mono text-terminal-red hover:bg-terminal-red/10 transition-colors"
+        >
+          {revealed ? "[ HIDE TARGET ]" : "[ TAP TO REVEAL TARGET ]"}
+        </button>
 
         {/* Dossier details */}
         <div className="border-t border-terminal-dim pt-3 space-y-1">
