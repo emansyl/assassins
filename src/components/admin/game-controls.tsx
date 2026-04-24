@@ -162,16 +162,22 @@ export function GameControls({ gameState, hasAssignments }: { gameState: GameSta
         </div>
       </TerminalCard>
 
-      {/* Assignments */}
-      <TerminalCard title="Assignments">
-        <TerminalButton
-          onClick={() => confirmAction === "generate" ? generateAssignments() : setConfirmAction("generate")}
-          loading={loading === "generate"}
-          className="w-full"
-          variant={confirmAction === "generate" ? "danger" : "primary"}
-        >
-          {confirmAction === "generate" ? "CONFIRM — THIS WILL REASSIGN ALL TARGETS" : "GENERATE ASSIGNMENT CHAIN"}
-        </TerminalButton>
+      {/* Target Assignments */}
+      <TerminalCard title="Target Assignments">
+        <div className="space-y-2">
+          <div className="text-terminal-dim text-[10px]">
+            REASSIGNS ALL ALIVE PLAYERS INTO A NEW RANDOM CIRCULAR CHAIN.
+            USE AT GAME START OR ANY TIME TO SHUFFLE.
+          </div>
+          <TerminalButton
+            onClick={() => confirmAction === "generate" ? generateAssignments() : setConfirmAction("generate")}
+            loading={loading === "generate"}
+            className="w-full"
+            variant={confirmAction === "generate" ? "danger" : "primary"}
+          >
+            {confirmAction === "generate" ? "CONFIRM — THIS WILL RESHUFFLE ALL TARGETS" : "SHUFFLE TARGETS"}
+          </TerminalButton>
+        </div>
       </TerminalCard>
 
 
