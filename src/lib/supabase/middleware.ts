@@ -31,7 +31,6 @@ export async function updateSession(request: NextRequest) {
   const { data, error } = await supabase.auth.getClaims();
 
   const isAuthenticated = !error && data?.claims;
-  const userEmail = data?.claims?.email as string | undefined;
 
   const pathname = request.nextUrl.pathname;
 
@@ -44,7 +43,6 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/onboarding") ||
     pathname.startsWith("/profile");
 
-  const isAdminRoute = pathname.startsWith("/admin");
   const isLoginPage = pathname === "/";
 
   // Redirect unauthenticated users from protected routes
@@ -54,14 +52,9 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect non-admin users from admin routes
-  if (isAdminRoute && isAuthenticated) {
-    if (userEmail !== process.env.GAME_MASTER_EMAIL) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/dashboard";
-      return NextResponse.redirect(url);
-    }
-  }
+  // Note: /admin authorization (game master OR demo user) is enforced in
+  // src/app/admin/layout.tsx, which has DB access to check is_demo.
+  // Middleware only enforces general authentication.
 
   // Redirect authenticated users from login page to dashboard
   if (isLoginPage && isAuthenticated) {

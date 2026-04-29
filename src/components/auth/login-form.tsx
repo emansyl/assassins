@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { isValidHBSEmail } from "@/lib/constants";
+import { canEmailLogin } from "@/app/login-actions";
 import { TerminalInput } from "@/components/ui/terminal-input";
 import { TerminalButton } from "@/components/ui/terminal-button";
 import { OtpVerification } from "./otp-verification";
@@ -21,12 +21,14 @@ export function LoginForm() {
     e.preventDefault();
     setError("");
 
-    if (!isValidHBSEmail(email)) {
-      setError("ACCESS DENIED. VALID HBS EMAIL REQUIRED (@mba2026.hbs.edu or @mba2027.hbs.edu)");
+    setLoading(true);
+    const allowed = await canEmailLogin(email);
+    if (!allowed) {
+      setError("EMAIL NOT RECOGNIZED. CONTACT COMMAND FOR ACCESS.");
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email: email.toLowerCase(),
       options: { shouldCreateUser: false },

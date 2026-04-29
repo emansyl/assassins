@@ -7,6 +7,7 @@ import { PlayerStatsBar } from "@/components/dashboard/player-stats-bar";
 import { EliminatedScreen } from "@/components/dashboard/eliminated-screen";
 import { DeadlineCountdown } from "@/components/ui/deadline-countdown";
 import { InstallPrompt } from "@/components/ui/install-prompt";
+import { DemoDashboard } from "@/components/demo/demo-dashboard";
 import type { Player, GameState } from "@/types";
 
 export default async function DashboardPage() {
@@ -43,6 +44,12 @@ export default async function DashboardPage() {
   if (!playerRes.data) redirect("/");
 
   const p = playerRes.data as Player;
+
+  // Demo users (e.g., professor) get a sample dashboard with mock data —
+  // they are never assigned a real target and cannot affect the live game.
+  if (p.is_demo) {
+    return <DemoDashboard />;
+  }
 
   // Gate behind onboarding
   if (!p.onboarding_complete) redirect("/onboarding");

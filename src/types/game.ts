@@ -19,6 +19,7 @@ export type Player = {
   onboarding_complete: boolean;
   rules_accepted_at: string | null;
   spoon_collected: boolean;
+  is_demo: boolean;
 };
 
 export type Assignment = {
